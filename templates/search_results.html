@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %} Search Results {% endblock %}
+
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Search results</h1>
+        <div>
+            <a href="{%url 'add_user' %}" class="btn btn-primary">Add User</a>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <button style="height: 50px;" class="btn btn-danger custom-back-btn" onclick="goBack()">Clear</button>
+        </div>
+    </div>
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Area Chart -->
+        <div class="col">
+            {% if results %}
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Results</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover all-users">
+                          <thead>
+                            <tr>
+                              <th scope="col">ID</th>
+                              <th scope="col">First Name</th>
+                              <th scope="col">Last Name</th>
+                              <th scope="col">Email</th>
+                              <th scope="col">Phone Number</th>
+                              <th scope="col">Gender</th>
+                              <th scope="col">Status</th>
+                              <th scope="col">Action</th>
+
+                            </tr>
+                          </thead>
+                          <tbody>
+                          {% for customer in results %}
+                            <tr>
+                               <th scope="row">{{ forloop.counter }}</th>
+                              <td>{{customer.customer_first_name}}</td>
+                              <td>{{customer.customer_last_name}}</td>
+                              <td>{{customer.customer_email}}</td>
+                              <td>{{customer.customer_phone_number}}</td>
+                              <td>{{customer.gender}}</td>
+                              <td>
+                                <span id="status_text_{{ customer.customer_id }}">{{ customer.status }}</span>
+                                <form id="status_form_{{ customer.customer_id }}" method="POST" action="{% url 'users' %}" style="display: inline;">
+                                  {% csrf_token %}
+                                  <input type="hidden" name="user_id" value="{{ customer.customer_id }}">
+                                  <select id="status_select_{{ customer.customer_id }}" class="form-control user-category" name="status" style="display: none;">
+                                    <option value="Normal User" {% if user.status == "Normal User" %}selected{% endif %}>Normal User</option>
+                                    <option value="Agent User" {% if user.status == "Agent User" %}selected{% endif %}>Agent User</option>
+                                  </select>
+                                </form>
+                              </td>
+                              <td>
+                                <button id="edit_button_{{ customer.customer_id }}" class="btn btn-secondary" onclick="editStatus('{{ customer.customer_id }}')">Edit</button>
+                                <button id="save_button_{{ customer.customer_id }}" class="btn btn-primary" onclick="saveStatus('{{ customer.customer_id }}')" style="display: none;">Save</button>
+                                <form id="delete_form_{{ customer.customer_id }}" method="POST" action="{% url 'delete_user' %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="user_id" value="{{ customer.customer_id }}">
+                                    <i class="fas fa-trash" onclick="document.getElementById('delete_form_{{ customer.customer_id }}').submit();" style="cursor: pointer;"></i>
+                                </form>
+                              </td>
+
+                            </tr>
+                          {% endfor %}
+                          </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <br>
+            <h2>No results found.</h2>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function goBack() {
+        window.history.back();
+    }
+</script>
+{% endblock %}
+

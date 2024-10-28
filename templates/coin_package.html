@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %} Coin Package {% endblock %}
+
+
+{% block content %}
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Packages</h1>
+        </div>
+
+        <!-- Content Row -->
+        <div>
+            <!-- Area Chart -->
+            <div class="col">
+                <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div
+                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Call Packages</h6>
+                        <a href="{% url 'add_package' %}" class="btn btn-primary">Add Package</a>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover all-users">
+                              <thead>
+                                <tr>
+                                  <th scope="col">ID</th>
+                                  <th scope="col">Package Amount</th>
+                                  <th scope="col">Coins</th>
+                                  <th scope="col">Action</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                              {% for coin in coins %}
+                                <tr>
+                                  <th scope="row">{{ forloop.counter }}</th>
+                                  <td>₹ {{coin.package_price}}</td>
+                                  <td>{{coin.total_coins}} coins</td>
+                                  <td>
+                                    <form method="POST" action="{% url 'delete_coin_package' coin.coin_id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                            <i class="fas fa-trash" style="color: grey;"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                                </tr>
+                              {% endfor %}
+                              </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

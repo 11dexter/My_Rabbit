@@ -1,0 +1,48 @@
+{% extends 'base.html'%}
+
+{% block title %}Add Package{% endblock %}
+{% block content %}
+                <div class="container-fluid">
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Add Packages</h1>
+                    </div>
+
+                    <!-- Content Row -->
+                    <div>
+                        <!-- Area Chart -->
+                        <div class="col">
+                            <div class="card shadow mb-4">
+                                <!-- Card Header - Dropdown -->
+                                <div
+                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Call Packages</h6>
+                                </div>
+                                <!-- Card Body -->
+                                <div class="card-body">
+                                    <div>
+                                        <form class="user" method="POST">
+                                            {% csrf_token %}
+                                            <div class="form-group row">
+                                                <div class="col-sm-6 mb-3 mb-sm-0">
+                                                      {{ callform.package_price }}
+                                                </div>
+                                                <div class=" col-sm-6">
+                                                       {{ callform.total_coins }}
+                                                </div>
+
+                                            </div>
+
+                                            <div>
+                                                <input type="submit" name="call_package" class="btn btn-primary" value="SUBMIT">
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+{% endblock %}

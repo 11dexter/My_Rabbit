@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %} Wallet {% endblock %}
+
+
+{% block content %}
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Wallet</h1>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row">
+            <!-- Area Chart -->
+            <div class="col">
+                <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div
+                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">All Users</h6>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <div>
+                            <table class="table all-users">
+                              <thead>
+                                <tr>
+                                  <th scope="col">ID</th>
+                                  <th scope="col">User</th>
+                                  <th scope="col">Wallet Coins</th>
+<!--                              <th scope="col">Chat Coins</th>-->
+
+                                </tr>
+                              </thead>
+                              <tbody>
+                              {% for wallet in wallets %}
+                                <tr>
+                                  <th scope="row">{{ forloop.counter }}</th>
+                                  <td>{{wallet.user.customer_first_name}} {{wallet.user.customer_last_name}}</td>
+                                  <td>{{wallet.wallet_coins}}</td>
+<!--                              <td>{{wallet.messages_remaining}}</td>-->
+                                </tr>
+                              {% endfor %}
+                              </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

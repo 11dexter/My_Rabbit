@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %} Report {% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Company Report</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Area Chart -->
+        <div class="col">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Generate Report</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="report-form" action="{% url 'report' %}">
+                        {% csrf_token %}
+                        <div class="form-group row">
+                            <div class="col-sm-3 mb-3 mb-sm-0">
+                                <label for="from_date">From Date:</label>
+                                <input type="date" class="form-control form-control-user" name="from_date" id="from_date">
+                            </div>
+                            <div class="col-sm-3 mb-3 mb-sm-0">
+                                <label for="to_date">To Date:</label>
+                                <input type="date" class="form-control form-control-user" name="to_date" id="to_date">
+                            </div>
+                            <div class="d-flex">
+                                <button type="submit" class="btn btn-primary">Get Report</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Report Card -->
+            <div id="report-card" class="report-card card shadow mb-4" style="display: none;">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Report</h6>
+                </div>
+                <div id="report" class="card-body">
+                    <button id="download-btn" class="btn btn-success mb-3">Download Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#report-form').on('submit', function(e) {
+            e.preventDefault();
+            var fromDate = $('#from_date').val();
+            var toDate = $('#to_date').val();
+            $.ajax({
+                type: 'POST',
+                url: $(this).attr('action'),
+                data: $(this).serialize(),
+                success: function(response) {
+                    let userTable = `<h2 class="h6 mb-3 text-gray-800">User Details</h2>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover table-bordered table-striped">
+                        <thead class="thead-light sticky-top">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Contact</th>
+                                <th>Purchases</th>
+                                <th>Payments</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                    response.user_details.forEach(function(detail, index) {
+                        userTable += `<tr>
+                            <th scope="row">${index + 1}</th>
+                            <td>${detail.user.first_name} ${detail.user.last_name}</td>
+                            <td>${detail.user.email}</td>
+                            <td>${detail.user.contact}</td>
+                            <td><ul class="list-unstyled">`;
+                        detail.purchases.forEach(function(purchase) {
+                            userTable += `<li><span class="badge badge-info">₹${parseFloat(purchase.purchase_amount).toFixed(2)}</span> on ${purchase.purchase_date}</li>`;
+                        });
+                        userTable += `</ul></td><td><ul class="list-unstyled">`;
+                        detail.payments.forEach(function(payment) {
+                            userTable += `<li><span class="badge badge-warning">${payment.amount}</span> on ${payment.created_at}</li>`;
+                        });
+                        userTable += `</ul></td></tr>`;
+                    });
+                    userTable += `</tbody></table></div>`;
+
+                    let agentTable = `<h2 class="h6 mb-3 text-gray-800">Agent Details</h2>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover table-bordered table-striped">
+                        <thead class="thead-light sticky-top" >
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Contact</th>
+                                <th>Languages</th>
+                                <th>Adhaar No</th>
+                                <th>Withdrawals</th>
+                                <th>Transactions</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                    response.agent_details.forEach(function(detail, index) {
+                        agentTable += `<tr>
+                            <th scope="row">${index + 1}</th>
+                            <td>${detail.agent.first_name} ${detail.agent.last_name}</td>
+                            <td>${detail.agent.email}</td>
+                            <td>${detail.agent.contact}</td>
+                            <td>${detail.agent.languages}</td>
+                            <td>${detail.agent.adhaar_no}</td>
+                            <td><ul class="list-unstyled">`;
+                        detail.withdrawals.forEach(function(withdrawal) {
+                            agentTable += `<li><span class="badge badge-danger">₹${parseFloat(withdrawal.withdrawal_amount).toFixed(2)}</span> on ${withdrawal.withdrawal_date}</li>`;
+                        });
+                        agentTable += `</ul></td><td><ul class="list-unstyled">`;
+                        detail.transactions.forEach(function(transaction) {
+                            agentTable += `<li><span class="badge badge-success">₹${parseFloat(transaction.transaction_amount).toFixed(2)}</span> on ${transaction.transaction_date}</li>`;
+                        });
+                        agentTable += `</ul></td></tr>`;
+                    });
+                    agentTable += `</tbody></table></div>`;
+
+                    $('#report').html(userTable + agentTable);
+                    $('#report-card').show();
+
+                    // Add download button functionality
+                    $('#download-btn').click(function() {
+                        let csvContent = "data:text/csv;charset=utf-8,";
+                        csvContent += "Type,ID,Name,Email,Contact,Details\n";
+
+                        response.user_details.forEach(function(detail, index) {
+                            csvContent += `User,${index+1},${detail.user.first_name} ${detail.user.last_name},${detail.user.email},${detail.user.contact},${detail.user.status},${detail.user.languages},${detail.user.adhaar_no},"Purchases: ${detail.purchases.map(p => p.purchase_date + ' - ' + p.purchase_amount).join(' | ')}; Payments: ${detail.payments.map(p => p.created_at + ' - ' + p.amount).join(' | ')}"\n`;
+                        });
+
+                        response.agent_details.forEach(function(detail, index) {
+                            csvContent += `Agent,${index + 1},${detail.agent.first_name} ${detail.agent.last_name},${detail.agent.email},${detail.agent.contact},${detail.agent.status},${detail.agent.languages},${detail.agent.adhaar_no},"Withdrawals: ${detail.withdrawals.map(w => w.withdrawal_date + ' - ' + w.withdrawal_amount).join(' | ')}; Transactions: ${detail.transactions.map(t => t.transaction_date + ' - ' + t.transaction_amount).join(' | ')}"\n`;
+                        });
+
+                        var encodedUri = encodeURI(csvContent);
+                        var link = document.createElement("a");
+                        link.setAttribute("href", encodedUri);
+                        link.setAttribute("download", "report.csv");
+                        document.body.appendChild(link);
+
+                        link.click();
+                    });
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

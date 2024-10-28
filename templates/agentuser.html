@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %} Agents {% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Agent Users</h1>
+        <div>
+            <a href="{% url 'add_user' %}" class="btn btn-primary">Add User</a>
+        </div>
+    </div>
+
+    <!-- Enhanced Search Bar (Half Width) -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <form method="GET" action="{% url 'agent_search' %}" class="navbar-search">
+                <div class="input-group">
+                    <!-- First Name Field -->
+                    <input type="text" name="first_name" class="form-control bg-white border-1 small rounded-left"
+                           placeholder="First Name" aria-label="First Name" aria-describedby="basic-addon2"
+                           style="padding: 10px; border-radius: 25px 0 0 25px; height: 50px;">
+
+                    <!-- Last Name Field -->
+                    <input type="text" name="last_name" class="form-control bg-white border-1 small"
+                           placeholder="Last Name" aria-label="Last Name" aria-describedby="basic-addon2"
+                           style="padding: 10px; margin-left: 3px; height: 50px;">
+
+                    <!-- Phone Number Field -->
+                    <input type="text" name="phone_number" class="form-control bg-white border-1 small"
+                           placeholder="Phone Number" aria-label="Phone Number" aria-describedby="basic-addon2"
+                           style="padding: 10px; margin-left: 3px; height: 50px;">
+
+                    <!-- Search Button (Text) -->
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit" style="padding: 10px; margin-left: 3px;">
+                            Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">All Users</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover all-users">
+                            <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">First Name</th>
+                                    <th scope="col">Last Name</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Phone Number</th>
+                                    <th scope="col">Gender</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for user in users %}
+                                <tr>
+                                    <th scope="row">{{ forloop.counter }}</th>
+                                    <td>{{ user.customer_first_name }}</td>
+                                    <td>{{ user.customer_last_name }}</td>
+                                    <td>{{ user.customer_email }}</td>
+                                    <td>{{ user.customer_phone_number }}</td>
+                                    <td>{{ user.gender }}</td>
+                                    <td>
+                                        <span id="status_text_{{ user.customer_id }}">{{ user.status }}</span>
+                                        <form id="status_form_{{ user.customer_id }}" method="POST" action="{% url 'users' %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_id" value="{{ user.customer_id }}">
+                                            <select id="status_select_{{ user.customer_id }}" class="form-control user-category" name="status" style="display: none;">
+                                                <option value="Normal User" {% if user.status == "Normal User" %}selected{% endif %}>Normal User</option>
+                                                <option value="Agent User" {% if user.status == "Agent User" %}selected{% endif %}>Agent User</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <button id="edit_button_{{ user.customer_id }}" class="btn btn-secondary" onclick="editStatus('{{ user.customer_id }}')">Edit</button>
+                                        <button id="save_button_{{ user.customer_id }}" class="btn btn-primary" onclick="saveStatus('{{ user.customer_id }}')" style="display: none;">Save</button>
+                                        <form id="delete_form_{{ user.customer_id }}" method="POST" action="{% url 'delete_user' %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_id" value="{{ user.customer_id }}">
+                                            <i class="fas fa-trash" onclick="document.getElementById('delete_form_{{ user.customer_id }}').submit();" style="cursor: pointer;"></i>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
