@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import *
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponseNotAllowed, HttpResponse, HttpResponseRedirect
 from .forms import *
 from django.views.decorators.http import require_POST, require_GET
 from datetime import datetime
 from django.db.models import Q, Sum
 from django.utils.dateparse import parse_date
+from .models import *
 from .serializer import *
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -256,6 +257,19 @@ def agent_history(request):
 
     agent_history = WithdrawalHistoryModel.objects.all()
     return render(request, 'agentuser_history.html', {'agent_history': agent_history, 'username': username})
+
+@csrf_exempt
+def update_withdrawal_status(request, history_id):
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        try:
+            history = WithdrawalHistoryModel.objects.get(pk=history_id)
+            history.status = new_status
+            history.save()
+            return JsonResponse({'success': True})
+        except WithdrawalHistoryModel.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Record not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 # Search Bar View
@@ -587,16 +601,6 @@ def all_users(request):
     user_data = []
 
     for user in users:
-        # Get the last message sent by this user
-        # last_message_obj = MessageModel.objects.filter(sender=user).order_by('-created_at').first()
-        #
-        # if last_message_obj:
-        #     last_message = last_message_obj.message
-        #     last_message_time = last_message_obj.created_at
-        # else:
-        #     last_message = "no message"
-        #     last_message_time = "no message"
-
         user_data.append({
             'customer_id': user.customer_id,
             'customer_first_name': user.customer_first_name,
@@ -606,8 +610,6 @@ def all_users(request):
             'gender': user.gender,
             'status': user.status,
             'is_online': user.is_online,
-            # 'last_message': last_message,
-            # 'last_message_time': last_message_time,
             'rating': user.rating
         })
 
@@ -619,16 +621,6 @@ def all_agents(request):
     user_data = []
 
     for user in users:
-        # Get the last message sent by this user
-        # last_message_obj = MessageModel.objects.filter(sender=user).order_by('-created_at').first()
-        #
-        # if last_message_obj:
-        #     last_message = last_message_obj.message
-        #     last_message_time = last_message_obj.created_at
-        # else:
-        #     last_message = "no message"
-        #     last_message_time = "no message"
-
         user_data.append({
             'customer_id': user.customer_id,
             'customer_first_name': user.customer_first_name,
@@ -637,10 +629,7 @@ def all_agents(request):
             'customer_password': user.customer_password,
             'gender': user.gender,
             'status': user.status,
-            'languages':user.languages,
             'is_online': user.is_online,
-            # 'last_message': last_message,
-            # 'last_message_time': last_message_time,
             'rating':user.rating
         })
 
@@ -664,16 +653,29 @@ def wallet(request, id):
 @api_view(['POST'])
 def withdrawal(request, id):
     agent = WalletModel.objects.get(user__customer_id=id)
-    agent_amount = request.data.get('amount')
+    agent_amount = float(request.data.get('amount'))
+    withdrawal_method = request.data.get('withdrawal_method')
+    payment_details = request.data.get('payment_details')
+    print("Agent's total amount:", agent.total_amount)
+    print("Requested withdrawal amount:", agent_amount)
 
     if agent.total_amount >= 5000:
         agent.total_amount = agent.total_amount - agent_amount
         agent.save()
-        WithdrawalHistoryModel.objects.create(
+        withdrawal = WithdrawalHistoryModel.objects.create(
             agent=CustomerModel.objects.get(customer_id=id),
             withdrawal_amount=agent_amount,
-            withdrawal_date=datetime.now()
+            withdrawal_date=datetime.now(),
+            withdrawal_method=withdrawal_method,
+            status = 'Pending'
         )
+        # Create a withdrawal history entry
+        if withdrawal_method in ['gpay', 'phonepay']:
+            withdrawal.phone_number = payment_details.get('phone_number')
+        elif withdrawal_method == 'bank':
+            withdrawal.bank_account_number = payment_details.get('account_number')
+            withdrawal.bank_ifsc_code = payment_details.get('ifsc_code')
+        withdrawal.save()
 
         return JsonResponse({'message': f'Withdrawn amount: {agent_amount}'}, status=200)
     else:
@@ -817,11 +819,8 @@ def buy_call_package(request):
         return Response({'error': 'User or package not found'}, status=status.HTTP_404_NOT_FOUND)
 
     # Create payment entry
-    package_type = ContentType.objects.get_for_model(package)
     payment = PaymentModel.objects.create(
-        user=user,
-        package_content_type=package_type,
-        package_object_id=package.pk,
+        user=CustomerModel.objects.get(pk=user_id, status=CustomerModel.NORMAL_USER),
         amount=package.package_price,
         razorpay_id=razorpay_payment_id,
         paid=True,

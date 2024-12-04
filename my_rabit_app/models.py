@@ -88,10 +88,26 @@ class UserPurchaseModel(models.Model):
 
 
 class WithdrawalHistoryModel(models.Model):
-    agent_purchase_id = models.AutoField(primary_key=True)
-    agent = models.ForeignKey(CustomerModel, on_delete=models.CASCADE)
+    agentpurchase_id = models.AutoField(primary_key=True)
+    agent = models.ForeignKey(CustomerModel, on_delete=models.CASCADE, related_name='withdrawal_requests')
     withdrawal_amount = models.FloatField()
-    withdrawal_date = models.DateTimeField()
+    withdrawal_date = models.DateTimeField(auto_now_add=True)
+    withdrawal_method = models.CharField(max_length=20, choices=[
+        ('g pay', 'G Pay'),
+        ('phone pay', 'Phone Pe'),
+        ('bank', 'Bank Transfer'),
+    ])
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    bank_account_number = models.CharField(max_length=30, blank=True, null=True)
+    bank_ifsc_code = models.CharField(max_length=20, blank=True, null=True)
+    status = models.CharField(max_length=20, default='Pending', choices=[
+        ('Pending', 'Pending'),
+        ('Completed', 'Completed'),
+        ('Rejected', 'Rejected')
+    ])
+
+    def __str__(self):
+        return f"Withdrawal by ({self.agent.customer_id} - {self.withdrawal_amount} on {self.withdrawal_date}, {self.status})"
 
 # call details
 class CallDetailsModel(models.Model):
@@ -125,12 +141,9 @@ class AgentTransactionModel(models.Model):
 class PaymentModel(models.Model):
     payment_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(CustomerModel, on_delete=models.CASCADE)
-    # package_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    # package_object_id = models.PositiveIntegerField()
-    # package = GenericForeignKey('package_content_type', 'package_object_id')
     amount = models.FloatField()
     razorpay_id = models.CharField(max_length=100, blank=True)
-    razorpay_payment_signature = models.CharField(max_length=100, blank=True)
+    # razorpay_payment_signature = models.CharField(max_length=100, blank=True)
     paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(null=True)
 

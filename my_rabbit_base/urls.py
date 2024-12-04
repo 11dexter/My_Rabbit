@@ -37,6 +37,7 @@ urlpatterns = [
     path('add_package', views.add_package, name='add_package'),  # Add package to coin package
     path('history_normal_user', views.user_history, name='history_normal_users'),  # Page for viewing purchases of user
     path('history_agent_user', views.agent_history, name='history_agent_users'),  # Page for viewing withdrawals of agents
+    path('update-status/<int:history_id>/', views.update_withdrawal_status, name='update_withdrawal_status'),
     path('search/', views.search_results, name='search_results'), # view for all user search option
     path('agent/search/', views.agent_search, name='agent_search'),  # view for searching a agent
     path('user/search/', views.user_search, name='user_search'),  # view for searching a user

@@ -31,17 +31,48 @@
                                               <th scope="col">Agent Name</th>
                                               <th scope="col">Total Amount</th>
                                               <th scope="col">Date</th>
+                                              <th scope="col">Withdrawal Method</th>
+                                              <th scope="col">Phone Number</th>
+                                              <th scope="col">Bank Accnt Number</th>
+                                              <th scope="col">Bank IFSC Code</th>
+                                              <th scope="col">Status</th>
+                                              <th scope="col">Action</th>
                                             </tr>
                                           </thead>
                                           <tbody>
-                                          {% for history in agent_history %}
+                                            {% for history in agent_history %}
                                             <tr>
                                               <th scope="row">{{ forloop.counter }}</th>
                                               <td>{{history.agent.customer_first_name}} {{history.agent.customer_last_name}}</td>
                                               <td>₹ {{history.withdrawal_amount}}</td>
-                                              <td> {{history.withdrawal_date}}</td>
+                                              <td>{{history.withdrawal_date}}</td>
+                                              <td>{{history.withdrawal_method}}</td>
+                                              <td>{{history.phone_number}}</td>
+                                              <td>{{history.bank_account_number}}</td>
+                                              <td>{{history.bank_ifsc_code}}</td>
+
+                                              <!-- Status Column with Span for Current Status -->
+                                              <td>
+                                                <span style="{% if history.status == 'Pending' %}color: orange;{% elif history.status == 'Completed' %}color: green;{% elif history.status == 'Rejected' %}color: red;{% endif %}">
+            {{ history.status }}
+        </span>
+                                                <form class="status-form" data-history-id="{{ history.agentpurchase_id }}" method="POST" action="{% url 'update_withdrawal_status' history.agentpurchase_id %}" style="display: inline;">
+                                                  {% csrf_token %}
+                                                  <select name="status" class="status-dropdown" style="display: none;">
+                                                    <option value="Pending" {% if history.status == "Pending" %}selected{% endif %}>Pending</option>
+                                                    <option value="Completed" {% if history.status == "Completed" %}selected{% endif %}>Completed</option>
+                                                    <option value="Rejected" {% if history.status == "Rejected" %}selected{% endif %}>Rejected</option>
+                                                  </select>
+                                                </form>
+                                              </td>
+
+                                              <!-- Action Buttons -->
+                                              <td>
+                                                <button class="edit-btn btn btn-primary btn-sm">Edit</button>
+                                                <button class="save-btn btn btn-success btn-sm" style="display: none;">Save</button>
+                                              </td>
                                             </tr>
-                                          {% endfor %}
+                                            {% endfor %}
                                           </tbody>
                                         </table>
                                     </div>
