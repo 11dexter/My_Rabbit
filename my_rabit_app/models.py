@@ -34,6 +34,8 @@ class CustomerModel(models.Model):
     rating = models.IntegerField(default=0)
     terms_conditions = models.BooleanField(default=False)
     is_online = models.BooleanField(default=False)
+    is_engaged = models.BooleanField(default=False)
+    is_existing = models.BooleanField(default=False)
     adhaar_no = models.CharField(max_length=50, default="unknown")
     terms_conditions = models.BooleanField(default=False)
     gender = models.CharField(

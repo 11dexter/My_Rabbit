@@ -14,6 +14,7 @@ from rest_framework import status
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 
+
 # Create your views here.
 def login(request):
     if request.method == 'POST':
@@ -257,6 +258,7 @@ def agent_history(request):
 
     agent_history = WithdrawalHistoryModel.objects.all()
     return render(request, 'agentuser_history.html', {'agent_history': agent_history, 'username': username})
+
 
 @csrf_exempt
 def update_withdrawal_status(request, history_id):
@@ -529,9 +531,7 @@ def get_payment_data(request):
     return JsonResponse(sorted_data)
 
 
-
-
-#  View for API  ################################################################################################################################
+#  View for API  #####################################################################################################
 
 @api_view(['GET'])
 def check_users(request, mobileno):
@@ -543,6 +543,7 @@ def check_users(request, mobileno):
 
     except CustomerModel.DoesNotExist:
         return Response({'message': 'User not existing'}, status=400)
+
 
 @api_view(['POST'])
 def customers(request):
@@ -595,6 +596,7 @@ def customers(request):
     user_data = CustomerSerializer(user)
     return Response(user_data.data, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 def all_users(request):
     users = CustomerModel.objects.filter(status=CustomerModel.NORMAL_USER)
@@ -615,6 +617,7 @@ def all_users(request):
 
     return Response(user_data, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 def all_agents(request):
     users = CustomerModel.objects.filter(status=CustomerModel.AGENT_USER)
@@ -630,10 +633,11 @@ def all_agents(request):
             'gender': user.gender,
             'status': user.status,
             'is_online': user.is_online,
-            'rating':user.rating
+            'rating': user.rating
         })
 
     return Response(user_data, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 def update_profile(request, id):
@@ -644,11 +648,13 @@ def update_profile(request, id):
         return Response({"message": "Profile updated successfully"})
     return Response(user_data.errors)
 
+
 @api_view(['GET'])
 def wallet(request, id):
     wallet = WalletModel.objects.get(user=id)
     wallet_data = WalletSerializer(wallet, many=False)
     return Response(wallet_data.data)
+
 
 @api_view(['POST'])
 def withdrawal(request, id):
@@ -667,7 +673,7 @@ def withdrawal(request, id):
             withdrawal_amount=agent_amount,
             withdrawal_date=datetime.now(),
             withdrawal_method=withdrawal_method,
-            status = 'Pending'
+            status='Pending'
         )
         # Create a withdrawal history entry
         if withdrawal_method in ['gpay', 'phonepay']:
@@ -681,6 +687,7 @@ def withdrawal(request, id):
     else:
         # Return error response if balance is insufficient
         return JsonResponse({'error': 'Insufficient balance for withdrawal'}, status=400)
+
 
 @api_view(['POST'])
 def start_call(request):
@@ -705,6 +712,7 @@ def start_call(request):
     agent.save()
 
     return Response({"call_id": call.call_id})
+
 
 @api_view(['POST'])
 def check_call_status(request):
@@ -751,6 +759,7 @@ def check_call_status(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+
 @api_view(['POST'])
 def end_call(request):
     call_id = request.data.get('call_id')
@@ -770,8 +779,8 @@ def end_call(request):
         caller_wallet = WalletModel.objects.get(user=call.caller)
         agent_wallet = WalletModel.objects.get(user=call.agent)
 
-        cost_per_minute = 150 # deduct coin from user
-        amount_per_minute = 3 # 3rs to agent commission
+        cost_per_minute = 150  # deduct coin from user
+        amount_per_minute = 3  # 3rs to agent commission
 
         # Calculate cost per second
         cost_per_second = cost_per_minute / 60
@@ -805,6 +814,7 @@ def end_call(request):
         return Response({"error": "Wallet not found"}, status=404)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
 
 @api_view(['POST'])
 def buy_call_package(request):
@@ -842,11 +852,13 @@ def buy_call_package(request):
 
     return Response({'message': 'Package purchased successfully'}, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 def list_call_packages(request):
     packages = CallPackageModel.objects.all()
     serializer = CoinsSerializer(packages, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 def give_rating(request):
@@ -870,12 +882,14 @@ def give_rating(request):
 
     return Response({'message': "Thank you for your feedback!"}, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 def online_status(request, id):
-    user = CustomerModel.objects.get(customer_id = id)
+    user = CustomerModel.objects.get(customer_id=id)
     user.is_online = True
     user.save()
     return JsonResponse({'status': 'success', 'message': 'User is now online.'})
+
 
 @api_view(['GET'])
 def offline_status(request, id):
@@ -883,6 +897,3 @@ def offline_status(request, id):
     user.is_online = False
     user.save()
     return JsonResponse({'status': 'success', 'message': 'User is now offline.'})
-
-
-
